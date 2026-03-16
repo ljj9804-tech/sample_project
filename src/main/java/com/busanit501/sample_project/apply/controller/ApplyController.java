@@ -1,16 +1,23 @@
 package com.busanit501.sample_project.apply.controller;
 
-import com.busanit501.sample_project.apply.dto.ApplyDTO; // ApplyDTO 위치에 맞게 import 하세요!
+import com.busanit501.sample_project.apply.dto.ApplyDTO;
+import com.busanit501.sample_project.apply.service.ApplyService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model; // Model 임포트 필수
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.PostMapping; // 추가
-import org.springframework.web.servlet.mvc.support.RedirectAttributes; // 추가
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/apply")
+@RequiredArgsConstructor // 서비스 주입을 위해 추가
+@Log4j2
 public class ApplyController {
+
+    private final ApplyService applyService; // 서비스 주입
 
     @GetMapping("/info")
     public String getInfoPage(Model model) {
@@ -18,16 +25,17 @@ public class ApplyController {
         return "apply/info";
     }
 
-    // [추가할 코드] 신청서 전송을 처리하는 부분
     @PostMapping("/register")
     public String registerPost(ApplyDTO applyDTO, RedirectAttributes redirectAttributes) {
-        // 1. 여기서 원래 DB 저장을 해야 하지만, 지금은 로그만 찍어볼게요.
-        System.out.println("신청서 데이터 도착!: " + applyDTO);
+        log.info("신청서 데이터 전송 시도: " + applyDTO);
 
-        // 2. 화면에 띄워줄 메시지 저장
-        redirectAttributes.addFlashAttribute("message", "신청서가 정상적으로 제출되었습니다!\n신청현황은 내서재에서 확인 가능합니다.");
+        // 실제 DB 저장 서비스 호출
+        Long ano = applyService.register(applyDTO);
 
-        // 3. 다시 안내 페이지로 돌아가기 (리다이렉트)
+        // 성공 메시지에 신청 번호나 줄바꿈을 섞어서 전달
+        redirectAttributes.addFlashAttribute("message",
+                "신청서 접수가 완료되었습니다!\n신청번호: " + ano + "\n담당자 확인 후 연락드리겠습니다.");
+
         return "redirect:/apply/info";
     }
 }
